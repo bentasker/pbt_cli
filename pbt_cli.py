@@ -168,6 +168,15 @@ def fetchProject(proj):
         for ver in plist['versions']:
             PROJDATA[proj]['versions'][ver['Name']] = ver['href']
     
+    # Cache component URLs. We can't trivially calculate those either
+    if len(plist['components']) > 0 and "components" not in PROJDATA[proj]:
+        PROJDATA[proj]['components'] = {}
+        for comp in plist['components']:
+            PROJDATA[proj]['components'][comp['Name']] = comp['href']
+        
+    
+    
+    
     return plist
 
 
@@ -181,6 +190,40 @@ def listProject(proj,isstype=False,issstatus=False):
     print "%s: %s\n\n%s\n\n" % (plist['Key'],plist['Name'],stripTags(plist['Description']))
     
     print buildIssueTable(plist['issues'],isstype,issstatus)
+
+
+
+def listProjectComponent(proj,comp,isstype=False,issstatus=False):
+    ''' List issues for a specific project component
+    
+        Args:
+        
+        proj - the project key (E.g. GPXIN)
+        comp - The component name (e.g. Experimental Features)
+    
+    
+    '''
+    
+    if proj not in PROJDATA or "components" not in PROJDATA[proj] or comp not in PROJDATA[proj]["components"]:
+        # We need to fetch the project homepage first so that we can find out the version URL 
+        fetchProject(proj)
+        
+    if comp not in PROJDATA[proj]["components"]:
+        print "Invalid Component"
+        return
+    
+    # Otherwise, fetch the page
+    plist = getJSON(PROJDATA[proj]["components"][comp])
+    
+    print "%s: Component %s\n\n%s" % (proj,plist['Name'],plist['Description'])
+    print "--------------"
+    print "Issues"
+    print "--------------"
+    print buildIssueTable(plist['issues'],isstype,issstatus)
+
+
+
+
 
 
 def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,showFixes=True):
@@ -352,3 +395,6 @@ listProjectVersion('GPXIN','1.02')
 
 listProjectVersion('GPXIN','1.02',showFixes=False)
 listProjectVersion('GPXIN','1.02',showKnown=False)
+
+
+listProjectComponent('GPXIN','Experimental Features')
