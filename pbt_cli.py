@@ -6,6 +6,8 @@ import re
 import time
 
 import sys, readline, os,stat,requests
+import random
+import hashlib
 
 
 
@@ -44,8 +46,123 @@ PROJURLS={}
 ISSUEURLS={}
 PROJDATA={}
 
+
+
+class MemCache(dict):
+    ''' A rudimentary in-memory cache with several storage areas and classes.
+    By default, the permstorage area will get flushed once an hour
+    
+    Filched and amended from my RequestRouter project
+    
+    '''
+    
+    def __init__(self):
+        self.storage = {}
+        self.lastpurge = int(time.time())
+        self.purgeint = 900 # 15 mins
+        self.disabled = False
+        
+        # Seed hashes to try and avoid deliberate hash collisions
+        self.seed = random.getrandbits(32)
+
+
+    def setItem(self,key,val):
+        ''' Store an item in a specific area
+        '''
+        
+        if self.disabled:
+            return  
+        
+        key = self.genKeyHash(key)
+        
+        self.storage[key] = val
+
+
+    def getItem(self, key):
+        ''' Retrieve an item. Will check each storage area for an entry with the specified key
+        '''
+        
+        if self.disabled:
+            return  False        
+        
+        key = self.genKeyHash(key)
+        
+        if key not in self.storage:
+            return False
+            
+        return self.storage[key]
+
+
+    def invalidate(self,key):
+        ''' Invalidate an item within the cache
+        '''
+        key = self.genKeyHash(key)
+        
+        if key not in self.storage:
+            return
+        
+        del self.storage[key]
+    
+    
+    def genKeyHash(key):
+        ''' Convert the supplied key into a hash
+        
+            We combine it with a seed to help make hash collision attempts harder on public facing infrastructure.
+            Probably overkill, but better to have it and not need it
+            
+        '''
+        return hashlib.sha256("%s%s" % (self.seed,key)).hexdigest()
+    
+    
+    def __getitem__(self,val):
+        ''' Magic method so that the temporary store can be accessed as if this class were a dict
+        '''
+        return self.getItem(val)
+    
+    def __setitem__(self,key,val):
+        ''' Magic method so that the temporary store can be accessed as if this class were a dict
+        '''
+        return self.setItem(key,val)
+    
+            
+    def flush(self):
+        ''' Flush the temporary storage area and response cache
+        
+        Restore anything that's been 'pre' cached
+        '''
+        del self.storage
+        self.storage = {}
+        
+        # Generate a new seed so it's harder to predict hashes
+        self.seed = random.getrandbits(32)
+        self.lastpurge = int(time.time())
+
+        
+    def selfpurge(self):
+        ''' Sledgehammer for a nail. Periodically purge the permanent storage to make
+        sure we don't absorb too much memory
+        '''
+        if (int(time.time()) - self.purgeint) > self.lastpurge:
+            self.flush()
+
+
+
+
+
+
+
+
+
+
 def getJSON(url):
     #print "Fetching %s" % (url,)
+    
+    # Check whether we have it in cache
+    print "Checking cache"
+    resp = CACHE.getItem(url)
+    if resp:
+        return json.loads(resp)
+    
     
     request = urllib2.Request(url)
     
@@ -60,6 +177,9 @@ def getJSON(url):
     response = urllib2.urlopen(request)
     jsonstr = response.read()
     #print jsonstr
+    
+    CACHE.setItem(url,jsonstr)
+    
     return json.loads(jsonstr)
 
 
@@ -213,6 +333,8 @@ def fetchProject(proj):
     
     
     # Cache version URLs. We can't trivially calculate these
+    #
+    # Could be moved into the memcache, but it's not trivial to do, so leaving as a TODO for now
     if len(plist['versions']) > 0 and "versions" not in PROJDATA[proj]:
         PROJDATA[proj]['versions'] = {}
         for ver in plist['versions']:
@@ -451,6 +573,10 @@ def printIssue(isskey):
 
 
 def runInteractive(display_prompt,echo_cmd=False):
+    
+        # Trigger the periodic auto flushes
+        CACHE.selfpurge()
+        
 	try:
 	    readline.read_history_file(os.path.expanduser("~/.pbtcli.history"))
 	except: 
@@ -577,6 +703,8 @@ def parseProjectDisplay(cmdlist):
         return listProject(cmdlist[1], issstatus=cmdlist[3:])    
         
 
+
+CACHE = MemCache()
 
 if len(sys.argv) < 2:
         # Launch interactive mode
