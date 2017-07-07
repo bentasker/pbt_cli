@@ -50,8 +50,10 @@ if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
 PROJURLS={}
 ISSUEURLS={}
 PROJDATA={}
-
-
+NEXTISS=False
+PREVISS=False
+LASTVIEW=False
+VIEWNOW=False
 
 class MemCache(dict):
     ''' A rudimentary in-memory cache with several storage areas and classes.
@@ -576,6 +578,13 @@ def secondsToTime(s):
 def printIssue(isskey):
     ''' Print out details about an issue
     '''
+    
+    # Yeah, I know. Hacking the navigation stuff in in a hurry
+    global NEXTISS
+    global PREVISS
+    global LASTVIEW
+    global VIEWNOW
+    
     if isskey not in ISSUEURLS:
         url = "%s/browse/%s.json" % (BASEDIR,isskey)
     else:
@@ -585,6 +594,18 @@ def printIssue(isskey):
     if not issue:
         print "Error"
         return
+
+    # Set the history
+    LASTVIEW = VIEWNOW
+    VIEWNOW = isskey
+
+
+    # Set the navigation globals based on the data
+    if issue['Next']['Key']:
+        NEXTISS = issue['Next']['Key']
+
+    if issue['Previous']['Key']:
+        PREVISS = issue['Previous']['Key']
 
     print "%s: %s\n\n" % (issue['Key'],issue['Name'])
     print "------------------"
@@ -770,6 +791,33 @@ def processCommand(cmd):
         if not NEEDQUOTE:
             # Append the command segment
             cmdlist.append(entry.rstrip())
+
+
+    if cmdlist[0] == 'n':
+        # Navigation command to browse to the next issue
+        print NEXTISS
+        if not NEXTISS:
+            print "No issue defined as next. View an issue first"
+            return
+        
+        printIssue(NEXTISS)
+
+
+    if cmdlist[0] == 'b':
+        # Navigation command to browse to the previous issue
+        if not PREVISS:
+            print "No issue defined as previous. View an issue first"
+            return
+        
+        printIssue(PREVISS)
+
+
+    if cmdlist[0] == 'p':
+        if not LASTVIEW:
+            print "You don't seem to have viewed an issue previously"
+            return
+        printIssue(LASTVIEW)
+
 
             
     if cmdlist[0] == "projects":

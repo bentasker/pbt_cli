@@ -43,6 +43,14 @@ Where something intended as single argument contains a space, it should be quote
     ./pbt_cli.py projectcomp GPXIN 'Experimental Features'
 
 
+### Navigation
+
+The upstream JSON files define whether there's a 'next' or 'previous' issue, where those are available, you can switch to them by using the following keystrokes
+
+    n - move to next
+    b - move to defined previous
+    p - move to the previous issue you viewed
+    
 
 ### General
 
