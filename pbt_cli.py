@@ -589,17 +589,17 @@ def printIssue(isskey):
 
     # Set the history
     lastview = CACHE.getItem('Navi-now')
-    CACHE.setItem('Navi-last',lastview)
-    CACHE.setItem('Navi-now',isskey)
+    CACHE.setItem('Navi-last',lastview, ttl=99999999)
+    CACHE.setItem('Navi-now',isskey, ttl=99999999)
 
 
 
     # Set the navigation globals based on the data
     if issue['Next']['Key']:
-        CACHE.setItem('Navi-next',issue['Next']['Key'])
+        CACHE.setItem('Navi-next',issue['Next']['Key'], ttl=99999999)
 
     if issue['Previous']['Key']:
-        CACHE.setItem('Navi-prev',issue['Previous']['Key'])
+        CACHE.setItem('Navi-prev',issue['Previous']['Key'],  ttl=99999999)
         
 
     print "%s: %s\n\n" % (issue['Key'],issue['Name'])
@@ -1015,7 +1015,7 @@ if len(sys.argv) < 2:
 
         # Save the most recent view history
         lastview = CACHE.getItem('Navi-now')
-        CACHE.setItem('Navi-last',lastview)
+        CACHE.setItem('Navi-last',lastview, ttl=99999999)
         CACHE.writeToDiskCache()
         sys.exit()
 
