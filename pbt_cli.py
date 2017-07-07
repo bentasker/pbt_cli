@@ -15,7 +15,7 @@ ISSUEURLS={}
 PROJDATA={}
 
 def getJSON(url):
-    print "Fetching %s" % (url,)
+    #print "Fetching %s" % (url,)
     response = urllib2.urlopen(url)
     jsonstr = response.read()
     #print jsonstr
@@ -382,19 +382,15 @@ def printIssue(isskey):
                 print "%s\n\n" % (comment['body'],)
 
 
+# These were used for testing when building the methods above
 #listprojects()
 #listProject('BTFW',isstype=['Task'],issstatus=['Open'])
-listProject('BUGGER')
+#listProject('BUGGER')
 #printIssue('BUGGER-4')
 #printIssue('DNSCHAT-2')
 #printIssue('BUGGER-1')
 #printIssue('MAILARCHIV-10')
-
-
-listProjectVersion('GPXIN','1.02')
-
-listProjectVersion('GPXIN','1.02',showFixes=False)
-listProjectVersion('GPXIN','1.02',showKnown=False)
-
-
-listProjectComponent('GPXIN','Experimental Features')
+#listProjectVersion('GPXIN','1.02')
+#listProjectVersion('GPXIN','1.02',showFixes=False)
+#listProjectVersion('GPXIN','1.02',showKnown=False)
+#listProjectComponent('GPXIN','Experimental Features')
