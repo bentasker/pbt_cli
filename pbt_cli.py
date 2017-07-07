@@ -361,7 +361,7 @@ def stripTags(str):
     return re.sub('<[^<]+?>', '', str)
 
 
-def buildIssueTable(issues,isstype=False,issstatus=False):
+def buildIssueTable(issues,isstype=False,issstatus=False, titleContains=False):
     ''' Print a table of issues
     
         Args:
@@ -376,7 +376,7 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
     
        
     if isstype or issstatus:
-        print "Filtering by Issue type = %s and Status = %s\n\n" % (isstype,issstatus)
+        print "Filtering by Issue type = %s and Status = %s and Title contains '%s'\n\n" % (isstype,issstatus,titleContains)
         
 
     # Prevent case-sensitivity issues with filters
@@ -386,6 +386,8 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
     if issstatus:
         issstatus = [e.lower() for e in issstatus]
 
+    if titleContains:
+        titleContains = titleContains.lower()
         
     for issue in issues:
         
@@ -394,6 +396,9 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
             continue
         
         if issstatus and issue['Status'].lower() not in issstatus:
+            continue
+        
+        if titleContains and titleContains not in issue['Name'].lower():
             continue
         
         entry = {
@@ -455,7 +460,7 @@ def fetchProject(proj):
 
 
 
-def listProject(proj,isstype=False,issstatus=False):
+def listProject(proj,isstype=False,issstatus=False,titleContains=False):
     """ Print details about the specified project
     """
 
@@ -466,11 +471,11 @@ def listProject(proj,isstype=False,issstatus=False):
     
     print "%s: %s\n\n%s\n\n" % (plist['Key'],plist['Name'],stripTags(plist['Description']))
     
-    print buildIssueTable(plist['issues'],isstype,issstatus)
+    print buildIssueTable(plist['issues'],isstype,issstatus,titleContains)
 
 
 
-def listProjectComponent(proj,comp,isstype=False,issstatus=False):
+def listProjectComponent(proj,comp,isstype=False,issstatus=False,titleContains=False):
     ''' List issues for a specific project component
     
         Args:
@@ -504,14 +509,14 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False):
     print "--------------"
     print "Issues"
     print "--------------"
-    print buildIssueTable(plist['issues'],isstype,issstatus)
+    print buildIssueTable(plist['issues'],isstype,issstatus,titleContains)
 
 
 
 
 
 
-def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,showFixes=True):
+def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,showFixes=True,titleContains=False):
     ''' List issues for a specific project version
     
         Args:
@@ -549,14 +554,14 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
         print "--------------"
         print "Fixed Issues"
         print "--------------"
-        print buildIssueTable(plist['issues'],isstype,issstatus)
+        print buildIssueTable(plist['issues'],isstype,issstatus,titleContains)
     
 
     if showKnown:
         print "\n--------------"
         print "Known Issues"
         print "--------------"
-        print buildIssueTable(plist['Knownissues'],isstype,issstatus)    
+        print buildIssueTable(plist['Knownissues'],isstype,issstatus,titleContains)    
     
 
 
@@ -944,7 +949,9 @@ def parseProjectCompDisplay(cmdlist):
     
     if cmdlist[3] == "status":
         return listProjectComponent(cmdlist[1], cmdlist[2], issstatus=cmdlist[4:])    
-        
+
+    if cmdlist[3] == "title":
+        return listProjectComponent(cmdlist[1], cmdlist[2], titleContains=' '.join(cmdlist[4:]))
 
 
 
@@ -972,7 +979,9 @@ def parseProjectVerDisplay(cmdlist):
     
     if cmdlist[3] == "status":
         return listProjectVersion(cmdlist[1], cmdlist[2], issstatus=cmdlist[4:])    
-        
+
+    if cmdlist[3] == "title":
+        return listProjectVersion(cmdlist[1], cmdlist[2], titleContains=' '.join(cmdlist[4:]))
 
 
 
@@ -994,7 +1003,11 @@ def parseProjectDisplay(cmdlist):
     if cmdlist[2] == "status":
         return listProject(cmdlist[1], issstatus=cmdlist[3:])    
         
-
+    if cmdlist[2] == "title":
+        return listProject(cmdlist[1], titleContains=' '.join(cmdlist[3:]))
+    
+    
+    
 
 CACHE = MemCache()
 if DISKCACHE:
