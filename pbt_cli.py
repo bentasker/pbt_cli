@@ -68,6 +68,7 @@ class MemCache(dict):
         self.config = {}
         self.config['doSelfPurge'] = False # Disabled as entries have their own TTL
         self.config['defaultTTL'] = 900 # 15 mins
+        self.config['amOffline'] = False # Disable Offline mode by default
         
         # Seed hashes to try and avoid deliberate hash collisions
         self.seed = random.getrandbits(32)
@@ -104,8 +105,10 @@ class MemCache(dict):
         # Check whether the ttl has expired
         if (int(time.time()) - self.storage[keyh]["TTL"]) > self.storage[keyh]["SetAt"]:
             # TTL has expired. Invalidate the object and return false
-            self.invalidate(key)
-            return False
+            # only if we're not currently offline though.
+            if not self.config['amOffline']:
+                self.invalidate(key)
+                return False
         
         return self.storage[keyh]["Value"]
 
@@ -219,6 +222,10 @@ def getJSON(url):
         return json.loads(resp)
     
     
+    if CACHE.config['amOffline']:
+        print "Item not in cache and we're offline"
+        return False
+    
     request = urllib2.Request(url)
     
     if AUTH:
@@ -236,6 +243,34 @@ def getJSON(url):
     CACHE.setItem(url,jsonstr)
     
     return json.loads(jsonstr)
+
+
+
+def doTestRequest():
+    ''' Place a test request to work out whether we've got connectivity or not 
+    '''
+    url = "%s/manifest.json" % (BASEDIR,)
+    
+    request = urllib2.Request(url)
+    
+    if AUTH:
+        request.add_header("Authorization","Basic %s" % (AUTH,))
+    
+    if ADDITIONAL_HEADERS:
+        for header in ADDITIONAL_HEADERS:
+            request.add_header(header['name'],header['value'])
+    
+    try:
+        response = urllib2.urlopen(request)
+        jsonstr = response.read()
+        return True
+    except urllib2.URLError, e:
+        return False
+    except socket.timeout, e:
+        return False
+
+
+
 
 
 # See https://snippets.bentasker.co.uk/page-1705192300-Make-ASCII-Table-Python.html
@@ -284,6 +319,10 @@ def listprojects():
     """
     
     plist = getJSON("%s/manifest.json" % (BASEDIR,))
+    
+    if not plist:
+        print "Error"
+        return
     
     print """Projects:
             
@@ -380,7 +419,9 @@ def fetchProject(proj):
         url = PROJURLS[proj]
 
     plist = getJSON(url)
-    
+    if not plist:
+        print "Error"
+        return
     
     # Do some cachey-cachey
     if proj not in PROJDATA:
@@ -413,6 +454,9 @@ def listProject(proj,isstype=False,issstatus=False):
     """
 
     plist = fetchProject(proj)
+    if not plist:
+        print "Error"
+        return
     
     print "%s: %s\n\n%s\n\n" % (plist['Key'],plist['Name'],stripTags(plist['Description']))
     
@@ -434,6 +478,10 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False):
     if proj not in PROJDATA or "components" not in PROJDATA[proj] or comp not in PROJDATA[proj]["components"]:
         # We need to fetch the project homepage first so that we can find out the version URL 
         fetchProject(proj)
+
+    if proj not in PROJDATA:
+        print "Error"
+        return
         
     if comp not in PROJDATA[proj]["components"]:
         print "Invalid Component"
@@ -441,6 +489,10 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False):
     
     # Otherwise, fetch the page
     plist = getJSON(PROJDATA[proj]["components"][comp])
+    
+    if not plist:
+        print "Error"
+        return
     
     print "%s: Component %s\n\n%s" % (proj,plist['Name'],plist['Description'])
     print "--------------"
@@ -467,6 +519,11 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
     if proj not in PROJDATA or "versions" not in PROJDATA[proj] or ver not in PROJDATA[proj]["versions"]:
         # We need to fetch the project homepage first so that we can find out the version URL 
         fetchProject(proj)
+
+
+    if proj not in PROJDATA:
+        print "Error"
+        return
         
     if ver not in PROJDATA[proj]["versions"]:
         print "Invalid version"
@@ -474,6 +531,9 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
     
     # Otherwise, fetch the version page
     plist = getJSON(PROJDATA[proj]["versions"][ver])
+    if not plist:
+        print "Error"
+        return
     
     print "%s: Version %s\n\nState: %s" % (proj,plist['Name'],plist['State'])
     print "Time Est:     %s          Time Logged: %s\n"    % (plist['TimeEstimate'], plist['TimeLogged'])
@@ -517,6 +577,9 @@ def printIssue(isskey):
         url = ISSUEURLS[isskey]
 
     issue = getJSON(url)
+    if not issue:
+        print "Error"
+        return
 
     print "%s: %s\n\n" % (issue['Key'],issue['Name'])
     print "------------------"
@@ -680,7 +743,6 @@ def processCommand(cmd):
         if entry[0] == '"' or entry[0] == "'":
             # Starts with a quote.
             NEEDQUOTE=True
-            print "Found one"
         
         if entry[-1] == '"' or entry[-1] == "'":
             ENDSWITHQUOTE=True
@@ -719,15 +781,29 @@ def processCommand(cmd):
     if cmdlist[0] == "projectcomp":
         return parseProjectCompDisplay(cmdlist)
 
-
     if cmdlist[0] == "cache":
         return parseCacheOptions(cmdlist)
-
-
 
     if cmdlist[0] == "issue":
         return printIssue(cmdlist[1])
     
+    if cmdlist[0] == "set":
+        return parseSetCmd(cmdlist)
+    
+
+
+def parseSetCmd(cmdlist):
+    ''' Used to set various internals
+    '''
+    
+    if cmdlist[1] == "Offline":
+        CACHE.config['amOffline'] = True
+        print "Offline mode enabled"
+        
+    if cmdlist[1] == "Online":
+        CACHE.config['amOffline'] = False
+        print "Offline mode disabled"
+        
 
 
 
@@ -863,6 +939,10 @@ if DISKCACHE:
 if CACHE_TTL:
     CACHE.setConfig('defaultTTL',CACHE_TTL)
 
+
+if not doTestRequest():
+    print "Enabling Offline mode"
+    CACHE.setConfig('amOffline',True)
 
 if len(sys.argv) < 2:
         # Launch interactive mode
