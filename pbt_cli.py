@@ -877,8 +877,16 @@ def parseCacheOptions(cmdlist):
 
 
     if cmdlist[1] == "fetch":
+        if re.match('[A-Z]+-[0-9]+',cmdlist[2]):
+            url = "%s/browse/%s.json" % (BASEDIR,cmdlist[2])
+            getJSON(url)
+            print "Written to cache"
+            return
+            
         # Fetch the specified URL 
         getJSON(cmdlist[2])
+        print "Written to cache"
+        return
 
     if cmdlist[1] == "flush":
         # Flush the cache

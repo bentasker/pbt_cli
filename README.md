@@ -92,7 +92,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 ### Cache Interaction
 
     cache dump - Dumps out keys, values and expiry times from the cache (generates a *lot* of output)
-    cache fetch - Fetch the specified URL and write into cache
+    cache fetch [issuekey|url] - Fetch the specified Issue/URL and write into cache
     cache flush - Flush all values out of the cache (will also update the ondisk cache)
     cache get [key] - Fetch the value of a specific item from the cache
     cache invalidate [key] - Invalidate a specific item from the cache
