@@ -104,7 +104,7 @@ class MemCache(dict):
         del self.storage[key]
     
     
-    def genKeyHash(key):
+    def genKeyHash(self,key):
         ''' Convert the supplied key into a hash
         
             We combine it with a seed to help make hash collision attempts harder on public facing infrastructure.
