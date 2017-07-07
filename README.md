@@ -78,11 +78,11 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 
 ### Project Components
 
-    projectcomp [projkey] [ver] - List all issues for the specified project component
-    projectcomp [projkey] [ver] isopen - List only Open issues for the project component
-    projectcomp [projkey] [ver] type [types] - List only issues of type (multiple types can be space seperated)
-    projectcomp [projkey] [ver] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes).
-    projectcomp [projkey] [ver] title [searchstring] - List only issues where title contains specified phrase
+    projectcomp [projkey] [comp name] - List all issues for the specified project component
+    projectcomp [projkey] [comp name] isopen - List only Open issues for the project component
+    projectcomp [projkey] [comp name] type [types] - List only issues of type (multiple types can be space seperated)
+    projectcomp [projkey] [comp name] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes).
+    projectcomp [projkey] [comp name] title [searchstring] - List only issues where title contains specified phrase
     
 
 ### Issue View
