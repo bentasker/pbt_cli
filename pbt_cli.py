@@ -171,7 +171,6 @@ def printIssue(isskey):
     else:
         url = ISSUEURLS[isskey]
 
-    url = "%s/browse/%s.json?foobar=1222222" % (BASEDIR,isskey)
     issue = getJSON(url)
 
     print "%s: %s\n\n" % (issue['Key'],issue['Name'])
