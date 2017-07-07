@@ -875,6 +875,11 @@ def parseCacheOptions(cmdlist):
             Rows.append(p)
         print make_table(Cols,Rows)
 
+
+    if cmdlist[1] == "fetch":
+        # Fetch the specified URL 
+        getJSON(cmdlist[2])
+
     if cmdlist[1] == "flush":
         # Flush the cache
         CACHE.flush()
