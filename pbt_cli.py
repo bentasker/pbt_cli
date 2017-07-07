@@ -12,7 +12,7 @@ BASEDIR="https://projects.bentasker.co.uk/jira_projects"
 
 PROJURLS={}
 ISSUEURLS={}
-
+PROJDATA={}
 
 def getJSON(url):
     print "Fetching %s" % (url,)
@@ -146,21 +146,80 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
     
 
 
-
-def listProject(proj,isstype=False,issstatus=False):
-    """ Print details about the specified project
-    """
-
+def fetchProject(proj):
+    ''' Fetch the JSON for a project, and return it
+    '''
     if proj not in PROJURLS:
         url = "%s/browse/%s.json" % (BASEDIR,proj)
     else:
         url = PROJURLS[proj]
 
     plist = getJSON(url)
+    
+    
+    # Do some cachey-cachey
+    if proj not in PROJDATA:
+        PROJDATA[proj] = {}
+    
+    
+    # Cache version URLs. We can't trivially calculate these
+    if len(plist['versions']) > 0 and "versions" not in PROJDATA[proj]:
+        PROJDATA[proj]['versions'] = {}
+        for ver in plist['versions']:
+            PROJDATA[proj]['versions'][ver['Name']] = ver['href']
+    
+    return plist
 
+
+
+def listProject(proj,isstype=False,issstatus=False):
+    """ Print details about the specified project
+    """
+
+    plist = fetchProject(proj)
+    
     print "%s: %s\n\n%s\n\n" % (plist['Key'],plist['Name'],stripTags(plist['Description']))
     
     print buildIssueTable(plist['issues'],isstype,issstatus)
+
+
+def listProjectVersion(proj,ver,isstype=False,issstatus=False):
+    ''' List issues for a specific project version
+    
+        Args:
+        
+        proj - the project key (E.g. GPXIN)
+        ver - The version name (e.g. 1.02)
+    
+    
+    '''
+    
+    if proj not in PROJDATA or "versions" not in PROJDATA[proj] or ver not in PROJDATA[proj]["versions"]:
+        # We need to fetch the project homepage first so that we can find out the version URL 
+        fetchProject(proj)
+        
+    if ver not in PROJDATA[proj]["versions"]:
+        print "Invalid version"
+        return
+    
+    # Otherwise, fetch the version page
+    plist = getJSON(PROJDATA[proj]["versions"][ver])
+    
+    print "%s: Version %s\n\nState: %s" % (proj,plist['Name'],plist['State'])
+    print "Time Est:     %s          Time Logged: %s\n"    % (plist['TimeEstimate'], plist['TimeLogged'])
+    print "Release Date: %s\n" % (time.strftime('%Y-%m-%d', time.localtime(plist['ReleaseDate'])),)
+    
+    print "--------------"
+    print "Fixed Issues"
+    print "--------------"
+    print buildIssueTable(plist['issues'],isstype,issstatus)
+    
+    
+    print "\n--------------"
+    print "Known Issues"
+    print "--------------"
+    print buildIssueTable(plist['Knownissues'],isstype,issstatus)    
+    
 
 
 
@@ -284,4 +343,7 @@ listProject('BUGGER')
 #printIssue('BUGGER-4')
 #printIssue('DNSCHAT-2')
 #printIssue('BUGGER-1')
-printIssue('MAILARCHIV-10')
+#printIssue('MAILARCHIV-10')
+
+
+listProjectVersion('GPXIN','1.02')
