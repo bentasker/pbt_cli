@@ -17,6 +17,13 @@ By default, pages are cached for a short time (at time of writing, 15 minutes) t
 The CLI will allow you to interact with the cache to a small extent, and the cache is maintained between sessions by writing to an on-disk cache file. During execution the cache runs entirely in memory.
 
 
+### Features
+
+* Caching to reduce number of upstream connections
+* Pipe support
+* CLI maintains history
+
+
 
 ## Usage
 
