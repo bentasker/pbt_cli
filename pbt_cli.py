@@ -33,6 +33,8 @@ if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
             if cfgline[0] == "CACHE_TTL":
                 CACHE_TTL=int(cfgline[1])
 
+            if cfgline[0] == "DISKCACHE":
+                DISKCACHE=cfgline[1]
                 
             if cfgline[0] == "AUTH":
                 AUTH='='.join(cfgline[1:])
