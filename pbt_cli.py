@@ -50,10 +50,7 @@ if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
 PROJURLS={}
 ISSUEURLS={}
 PROJDATA={}
-NEXTISS=False
-PREVISS=False
-LASTVIEW=False
-VIEWNOW=False
+
 
 class MemCache(dict):
     ''' A rudimentary in-memory cache with several storage areas and classes.
@@ -579,12 +576,7 @@ def printIssue(isskey):
     ''' Print out details about an issue
     '''
     
-    # Yeah, I know. Hacking the navigation stuff in in a hurry
-    global NEXTISS
-    global PREVISS
-    global LASTVIEW
-    global VIEWNOW
-    
+
     if isskey not in ISSUEURLS:
         url = "%s/browse/%s.json" % (BASEDIR,isskey)
     else:
@@ -596,16 +588,19 @@ def printIssue(isskey):
         return
 
     # Set the history
-    LASTVIEW = VIEWNOW
-    VIEWNOW = isskey
+    lastview = CACHE.getItem('Navi-now')
+    CACHE.setItem('Navi-last',lastview)
+    CACHE.setItem('Navi-now',isskey)
+
 
 
     # Set the navigation globals based on the data
     if issue['Next']['Key']:
-        NEXTISS = issue['Next']['Key']
+        CACHE.setItem('Navi-next',issue['Next']['Key'])
 
     if issue['Previous']['Key']:
-        PREVISS = issue['Previous']['Key']
+        CACHE.setItem('Navi-prev',issue['Previous']['Key'])
+        
 
     print "%s: %s\n\n" % (issue['Key'],issue['Name'])
     print "------------------"
@@ -794,30 +789,32 @@ def processCommand(cmd):
 
 
     if cmdlist[0] == 'n':
-        # Navigation command to browse to the next issue
-        print NEXTISS
-        if not NEXTISS:
+        # Navigation command to browse to the next issue       
+        nextiss = CACHE.getItem('Navi-next')
+        if not nextiss:
             print "No issue defined as next. View an issue first"
             return
         
-        printIssue(NEXTISS)
+        return printIssue(nextiss)
 
 
     if cmdlist[0] == 'b':
         # Navigation command to browse to the previous issue
-        if not PREVISS:
+        previss = CACHE.getItem('Navi-prev')
+        if not previss:
             print "No issue defined as previous. View an issue first"
             return
         
-        printIssue(PREVISS)
+        return printIssue(previss)
 
 
-    if cmdlist[0] == 'p':
-        if not LASTVIEW:
+    if cmdlist[0] == 'p' or cmdlist[0] == 'back':
+        # Navigation command to go back to the last issue viewed
+        lastview = CACHE.getItem('Navi-last')
+        if not lastview:
             print "You don't seem to have viewed an issue previously"
             return
-        printIssue(LASTVIEW)
-
+        return printIssue(lastview)
 
             
     if cmdlist[0] == "projects":
@@ -1010,6 +1007,10 @@ if len(sys.argv) < 2:
                 echo_cmd = False
 
         runInteractive(display_prompt,echo_cmd)
+
+        # Save the most recent view history
+        lastview = CACHE.getItem('Navi-now')
+        CACHE.setItem('Navi-last',lastview)
         CACHE.writeToDiskCache()
         sys.exit()
 

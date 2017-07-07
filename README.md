@@ -47,9 +47,9 @@ Where something intended as single argument contains a space, it should be quote
 
 The upstream JSON files define whether there's a 'next' or 'previous' issue, where those are available, you can switch to them by using the following keystrokes
 
-    n - move to next
-    b - move to defined previous
-    p - move to the previous issue you viewed
+    n - move to the issue defined next
+    b - move to the issue defined previous
+    [p|back] - move to the previous issue you viewed
     
 
 ### General
