@@ -26,6 +26,11 @@ Commands can be parsed in one of three ways
 * Interactivey (`./pbt_cli.py`)
 * As arguments (`./pbt_cli.py projects`)
 
+Where something intended as single argument contains a space, it should be quoted:
+
+    ./pbt_cli.py projectcomp GPXIN 'Experimental Features'
+
+
 
 ### General
 
@@ -38,7 +43,7 @@ Commands can be parsed in one of three ways
     project [projkey] - List all issues for the specified project
     project [projkey] isopen - List only Open issues for the project
     project [projkey] type [types] - List only issues of type (multiple types can be space seperated)
-    project [projkey] status [statuses] - List only issues with status matching list (multiple types can be space seperated) - Current known limitation - statuses with spaces won't work
+    project [projkey] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes)
 
 
 ### Project Versions
@@ -46,18 +51,16 @@ Commands can be parsed in one of three ways
     projectver [projkey] [ver] - List all issues for the specified project version
     projectver [projkey] [ver] isopen - List only Open issues for the project version
     projectver [projkey] [ver] type [types] - List only issues of type (multiple types can be space seperated)
-    projectver [projkey] [ver] status [statuses] - List only issues with status matching list (multiple types can be space seperated). Current known limitation - statuses with spaces won't work
+    projectver [projkey] [ver] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes).
     projectver [projkey] [ver] knownissues - List only known issues affecting specified version
     projectver [projkey] [ver] implements - List only issues implemented (or fixed) in the specified version
 
 ### Project Components
 
-Known Issue - Component names with spaces in (so, sadly, most of mine) aren't supported
-
     projectcomp [projkey] [ver] - List all issues for the specified project component
     projectcomp [projkey] [ver] isopen - List only Open issues for the project component
     projectcomp [projkey] [ver] type [types] - List only issues of type (multiple types can be space seperated)
-    projectcomp [projkey] [ver] status [statuses] - List only issues with status matching list (multiple types can be space seperated). Current known limitation - statuses with spaces won't work
+    projectcomp [projkey] [ver] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes).
 
 
 ### Issue View

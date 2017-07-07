@@ -666,10 +666,45 @@ def processCommand(cmd):
     if re.match('[A-Z]+-[0-9]+',cmd):
         return printIssue(cmd)
 
+    # We now need to build the command, but take into account that strings may be wrapped in quotes
+    # these shoudld be treated as a single argument 
 
     # Split the command out to a list
-    cmdlist = cmd.split(' ')
+    origcmdlist = cmd.split(' ')
+    cmdlist = []
+    NEEDQUOTE=False
+    ENDSWITHQUOTE=False
+    txtbuffer=''
+    
+    for entry in origcmdlist:
+        if entry[0] == '"' or entry[0] == "'":
+            # Starts with a quote.
+            NEEDQUOTE=True
+            print "Found one"
+        
+        if entry[-1] == '"' or entry[-1] == "'":
+            ENDSWITHQUOTE=True
+        
+        if NEEDQUOTE and not ENDSWITHQUOTE:
+            # Need a quote, just append it to the buffer for now
+            txtbuffer += entry.replace("'","").replace('"',"")
+            
+            # Reinstate the original space
+            txtbuffer += " "
+    
+        # Does it end with a quote?
+        if ENDSWITHQUOTE:
+            # It does. Append to the buffer (known bug here!)
+            txtbuffer += entry.replace("'","").replace('"',"")
+            NEEDQUOTE=False
+            entry = txtbuffer
+            txtbuffer = ''
+            
+        if not NEEDQUOTE:
+            # Append the command segment
+            cmdlist.append(entry.rstrip())
 
+            
     if cmdlist[0] == "projects":
         return listprojects()
 
@@ -700,7 +735,7 @@ def parseCacheOptions(cmdlist):
     ''' Utility functions to aid troubleshooting if the cache causes any headaches
     '''
     
-     if cmdlist[1] == "dump":
+    if cmdlist[1] == "dump":
         # Dump the contents of the cache
         Cols = ['Key','Expires','Value']
         Rows = []
@@ -847,6 +882,13 @@ if len(sys.argv) < 2:
 
 
 # Otherwise, pull the command from the commandline arguments
+
+# Process them first to handle quoted strings
+for i,val in enumerate(sys.argv):
+    if " " in val:
+        sys.argv[i] = "'%s'" % (val,)
+    
+    
 command=" ".join(sys.argv[1:])
 processCommand(command)
 CACHE.writeToDiskCache()
