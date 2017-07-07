@@ -10,7 +10,35 @@ import sys, readline, os,stat,requests
 
 
 BASEDIR="https://projects.bentasker.co.uk/jira_projects"
+AUTH=False
+ADDITIONAL_HEADERS=False
 
+# I use this settings file to gain access to the non-public copy of my projects
+if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
+    print "Loading settings"
+    with open(os.path.expanduser("~/.pbtcli.settings"),'r') as f:
+        for x in f:
+            x = x.rstrip()
+            if not x:
+                continue
+            
+            # The lines are keyvalue pairs
+            cfgline = x.split("=")
+            if cfgline[0] == "BASEDIR":
+                BASEDIR=cfgline[1]
+                
+            if cfgline[0] == "AUTH":
+                AUTH='='.join(cfgline[1:])
+
+            if cfgline[0] == "ADD_HEADER":
+                if not ADDITIONAL_HEADERS:
+                    ADDITIONAL_HEADERS = []
+                    
+                h = {
+                        'name' : cfgline[1],
+                        'value' : '='.join(cfgline[2:]),
+                    }
+                ADDITIONAL_HEADERS.append(h)
 
 PROJURLS={}
 ISSUEURLS={}
@@ -18,7 +46,18 @@ PROJDATA={}
 
 def getJSON(url):
     #print "Fetching %s" % (url,)
-    response = urllib2.urlopen(url)
+    
+    request = urllib2.Request(url)
+    
+    if AUTH:
+        request.add_header("Authorization","Basic %s" % (AUTH,))
+    
+    if ADDITIONAL_HEADERS:
+        for header in ADDITIONAL_HEADERS:
+            request.add_header(header['name'],header['value'])
+    
+    
+    response = urllib2.urlopen(request)
     jsonstr = response.read()
     #print jsonstr
     return json.loads(jsonstr)
