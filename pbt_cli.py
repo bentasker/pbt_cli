@@ -139,7 +139,7 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
         rows.append(entry)
         
         if issue['Key'] not in ISSUEURLS:
-            ISSUEURLS[issue['key']] = issue['href']
+            ISSUEURLS[issue['Key']] = issue['href']
         
     
     return make_table(Cols,rows)
@@ -163,8 +163,109 @@ def listProject(proj,isstype=False,issstatus=False):
     print buildIssueTable(plist['issues'],isstype,issstatus)
 
 
+def printIssue(isskey):
+    ''' Print out details about an issue
+    '''
+    if isskey not in ISSUEURLS:
+        url = "%s/browse/%s.json" % (BASEDIR,isskey)
+    else:
+        url = ISSUEURLS[isskey]
 
+    url = "%s/browse/%s.json?foobar=1222222" % (BASEDIR,isskey)
+    issue = getJSON(url)
+
+    print "%s: %s\n\n" % (issue['Key'],issue['Name'])
+    print "------------------"
+    print "Issue Details"
+    print "------------------"
+    print "Issue Type:  %s" % (issue['IssueType'])
+    print "Priority:    %s          Status: %s\n\n" % (issue['Priority'], issue['Status'])
+    print "Reporter:    %s          Assignee: %s" % (issue['Reporter'], issue['assigneee'])
+    print "Resolution:  %s\n\n" % (issue['Resolution'],)
+    print "------------------"
+    print "Issue Description"
+    print "------------------\n"
+    print "%s\n\n" % (issue['Description'],)
+    
+    # Print subtasks if there are any
+    if len(issue['Relations']['SubTasks']) > 0:
+            print "------------------"
+            print "Subtasks"
+            print "------------------\n"
+            Cols = ['Key','Summary']
+            rows = []
+            for subtask in issue['Relations']['SubTasks']:
+                entry = {
+                        'Key' : subtask['Key'],
+                        'Summary' : subtask['Name']
+                    }
+                rows.append(entry)
+                if subtask['Key'] not in ISSUEURLS:
+                    ISSUEURLS[subtask['Key']] = issue['href']
+            
+            print make_table(Cols,rows)
+    
+    # Print internal relations (if any)
+    Cols = ['Relation Type','Key','Summary','URL']
+    relrows = []
+    if len(issue['Relations']['LinkedIssues']) > 0:
+            for relissue in issue['Relations']['LinkedIssues']:
+                entry = {
+                        'Relation Type' : relissue['RelType'],
+                        'Key' : relissue['Key'],
+                        'Summary' : relissue['Name'],
+                        'URL' : '' # Will be used later
+                    }
+                relrows.append(entry)
+                if relissue['Key'] not in ISSUEURLS:
+                    ISSUEURLS[relissue['Key']] = relissue['href']
+
+            # We don't print yet, as we want to merge in any external links
+
+
+    if "RelatedLinks" in issue['Relations']:
+            for link in issue['Relations']['RelatedLinks']:
+                entry = {
+                        'Relation Type' : '',
+                        'Key' : '',
+                        'Summary' : link['title'],
+                        'URL' : link['href']
+                    }
+                relrows.append(entry)
+    
+    # Similarly, add any attachments if present
+    if len(issue['attachments']) > 0:
+            for attachment in issue['attachments']:
+                entry = {
+                        'Relation Type' : 'Attachment',
+                        'Key' : '',
+                        'Summary' : attachment['Name'],
+                        'URL' : attachment['href']
+                    }
+                relrows.append(entry)
+    
+    
+    if len(relrows) > 0:
+            print "\n------------------"
+            print "Relations"
+            print "------------------\n"        
+            print make_table(Cols,relrows)            
+    
+    # Finally, the big one, issue comments
+    if issue['Comments']['count'] > 0:
+        print "\n------------------"
+        print "Comments"
+        print "------------------\n"
+        for comment in issue['Comments']['items']:
+                print "----------------------------------------------------------------"
+                print "%s\n%s" % (comment['Author'],time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(comment['Created'])))
+                print "----------------------------------------------------------------"
+                print "%s\n\n" % (comment['body'],)
 
 
 #listprojects()
-listProject('BTFW',isstype=['Task'],issstatus=['Open'])
+#listProject('BTFW',isstype=['Task'],issstatus=['Open'])
+listProject('BUGGER')
+#printIssue('BUGGER-4')
+#printIssue('DNSCHAT-2')
+printIssue('BUGGER-1')
