@@ -5,6 +5,8 @@ import json
 import re
 import time
 
+import sys, readline, os,stat,requests
+
 
 
 BASEDIR="https://projects.bentasker.co.uk/jira_projects"
@@ -113,17 +115,26 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
     Cols = ['Key','Type','Priority','Summary','Status','Resolution','Created','Assigned To']
     rows = []
     
+       
     if isstype or issstatus:
         print "Filtering by Issue type = %s and Status = %s\n\n" % (isstype,issstatus)
         
+
+    # Prevent case-sensitivity issues with filters
+    if isstype:
+        isstype = [e.lower() for e in isstype]
+
+    if issstatus:
+        issstatus = [e.lower() for e in issstatus]
+
         
     for issue in issues:
         
         # Check whether we're filtering by issue type
-        if isstype and issue['IssueType'] not in isstype:
+        if isstype and issue['IssueType'].lower() not in isstype:
             continue
         
-        if issstatus and issue['Status'] not in issstatus:
+        if issstatus and issue['Status'].lower() not in issstatus:
             continue
         
         entry = {
@@ -394,3 +405,160 @@ def printIssue(isskey):
 #listProjectVersion('GPXIN','1.02',showFixes=False)
 #listProjectVersion('GPXIN','1.02',showKnown=False)
 #listProjectComponent('GPXIN','Experimental Features')
+
+
+
+# CLI related functions begin
+
+
+def runInteractive(display_prompt,echo_cmd=False):
+	try:
+	    readline.read_history_file(os.path.expanduser("~/.pbtcli.history"))
+	except: 
+	    pass # Ignore FileNotFoundError, history file doesn't exist
+
+	while True:
+	    try:
+		command = raw_input(display_prompt)
+
+	    except EOFError:
+		print("")
+		break
+
+	    if command == "q":
+		break
+
+	    elif command.startswith("#") or command == "" or command == " ":
+		continue
+
+	    if echo_cmd:
+		print "> " + command
+
+	    readline.write_history_file(os.path.expanduser("~/.pbtcli.history"))
+	    processCommand(command)
+
+
+def processCommand(cmd):
+    ''' Process the command syntax to work out which functions need to be called
+    '''
+    
+    # First, check whether we've just been given an issue key 
+    if re.match('[A-Z]+-[0-9]+',cmd):
+        return printIssue(cmd)
+
+
+    # Split the command out to a list
+    cmdlist = cmd.split(' ')
+
+    if cmdlist[0] == "projects":
+        return listprojects()
+
+    if cmdlist[0] == "project":
+        return parseProjectDisplay(cmdlist)
+
+
+    if cmdlist[0] == "projectver":
+        return parseProjectVerDisplay(cmdlist)
+    
+
+    if cmdlist[0] == "projectcomp":
+        return parseProjectCompDisplay(cmdlist)
+
+
+
+    if cmdlist[0] == "issue":
+        return printIssue(cmdlist[1])
+    
+
+
+def parseProjectCompDisplay(cmdlist):
+    ''' Handle the command line syntax for anything beginning with the word projectver
+    '''
+    
+    # Most simple case, simply list the project
+    if len(cmdlist) == 3:
+        return listProjectComponent(cmdlist[1],cmdlist[2])
+
+    if cmdlist[3] == "isopen":
+        return listProjectComponent(cmdlist[1], cmdlist[2], issstatus=["Open","In Progress"])
+    
+    if cmdlist[3] == "type":
+        return listProjectComponent(cmdlist[1], cmdlist[2], isstype=cmdlist[4:])
+    
+    if cmdlist[3] == "status":
+        return listProjectComponent(cmdlist[1], cmdlist[2], issstatus=cmdlist[4:])    
+        
+
+
+
+
+def parseProjectVerDisplay(cmdlist):
+    ''' Handle the command line syntax for anything beginning with the word projectver
+    '''
+    
+    # Most simple case, simply list the project
+    if len(cmdlist) == 3:
+        return listProjectVersion(cmdlist[1],cmdlist[2])
+
+    if cmdlist[3] == "knownissues":
+        return listProjectVersion(cmdlist[1], cmdlist[2], showFixes=False)        
+
+    if cmdlist[3] == "implements":
+        return listProjectVersion(cmdlist[1], cmdlist[2], showKnown=False)
+
+
+    if cmdlist[3] == "isopen":
+        return listProjectVersion(cmdlist[1], cmdlist[2], issstatus=["Open","In Progress"])
+    
+    if cmdlist[3] == "type":
+        return listProjectVersion(cmdlist[1], cmdlist[2], isstype=cmdlist[4:])
+    
+    if cmdlist[3] == "status":
+        return listProjectVersion(cmdlist[1], cmdlist[2], issstatus=cmdlist[4:])    
+        
+
+
+
+def parseProjectDisplay(cmdlist):
+    ''' Handle the command line syntax for anything beginning with the word project
+    '''
+    
+    # Most simple case, simply list the project
+    if len(cmdlist) == 2:
+        return listProject(cmdlist[1])
+        
+
+    if cmdlist[2] == "isopen":
+        return listProject(cmdlist[1], issstatus=["Open","In Progress"])
+    
+    if cmdlist[2] == "type":
+        return listProject(cmdlist[1], isstype=cmdlist[3:])
+    
+    if cmdlist[2] == "status":
+        return listProject(cmdlist[1], issstatus=cmdlist[3:])    
+        
+
+
+if len(sys.argv) < 2:
+        # Launch interactive mode
+        
+        # If commands are being redirected/piped, we don't want to display the prompt after each
+        mode = os.fstat(sys.stdin.fileno()).st_mode
+        if stat.S_ISFIFO(mode) or stat.S_ISREG(mode):
+                display_prompt = ""
+                echo_cmd = True
+        else:
+                display_prompt = "pbtcli> "
+                echo_cmd = False
+
+        runInteractive(display_prompt,echo_cmd)
+        sys.exit()
+
+
+# Otherwise, pull the command from the commandline arguments
+command=" ".join(sys.argv[1:])
+processCommand(command)
+
+
+
+
