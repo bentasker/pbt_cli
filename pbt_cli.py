@@ -11,6 +11,7 @@ BASEDIR="https://projects.bentasker.co.uk/jira_projects"
 
 
 PROJURLS={}
+ISSUEURLS={}
 
 
 def getJSON(url):
@@ -136,6 +137,10 @@ def buildIssueTable(issues,isstype=False,issstatus=False):
             'Assigned To' : issue['assigneee']
         }
         rows.append(entry)
+        
+        if issue['Key'] not in ISSUEURLS:
+            ISSUEURLS[issue['key']] = issue['href']
+        
     
     return make_table(Cols,rows)
     
