@@ -183,7 +183,7 @@ def listProject(proj,isstype=False,issstatus=False):
     print buildIssueTable(plist['issues'],isstype,issstatus)
 
 
-def listProjectVersion(proj,ver,isstype=False,issstatus=False):
+def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,showFixes=True):
     ''' List issues for a specific project version
     
         Args:
@@ -209,16 +209,18 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False):
     print "Time Est:     %s          Time Logged: %s\n"    % (plist['TimeEstimate'], plist['TimeLogged'])
     print "Release Date: %s\n" % (time.strftime('%Y-%m-%d', time.localtime(plist['ReleaseDate'])),)
     
-    print "--------------"
-    print "Fixed Issues"
-    print "--------------"
-    print buildIssueTable(plist['issues'],isstype,issstatus)
+    if showFixes:
+        print "--------------"
+        print "Fixed Issues"
+        print "--------------"
+        print buildIssueTable(plist['issues'],isstype,issstatus)
     
-    
-    print "\n--------------"
-    print "Known Issues"
-    print "--------------"
-    print buildIssueTable(plist['Knownissues'],isstype,issstatus)    
+
+    if showKnown:
+        print "\n--------------"
+        print "Known Issues"
+        print "--------------"
+        print buildIssueTable(plist['Knownissues'],isstype,issstatus)    
     
 
 
@@ -347,3 +349,6 @@ listProject('BUGGER')
 
 
 listProjectVersion('GPXIN','1.02')
+
+listProjectVersion('GPXIN','1.02',showFixes=False)
+listProjectVersion('GPXIN','1.02',showKnown=False)
