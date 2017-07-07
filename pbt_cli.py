@@ -14,6 +14,7 @@ import hashlib
 BASEDIR="https://projects.bentasker.co.uk/jira_projects"
 AUTH=False
 ADDITIONAL_HEADERS=False
+DISKCACHE='/tmp/pbtcli.cache'
 
 # I use this settings file to gain access to the non-public copy of my projects
 if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
@@ -61,7 +62,7 @@ class MemCache(dict):
         self.lastpurge = int(time.time())
         self.purgeint = 900 # 15 mins
         self.disabled = False
-        
+        self.config = {}
         # Seed hashes to try and avoid deliberate hash collisions
         self.seed = random.getrandbits(32)
 
@@ -136,6 +137,9 @@ class MemCache(dict):
         # Generate a new seed so it's harder to predict hashes
         self.seed = random.getrandbits(32)
         self.lastpurge = int(time.time())
+        
+        # Write the updated (and now empty) cache to disk so we don't end up reusing later
+        self.writeToDiskCache()
 
         
     def selfpurge(self):
@@ -146,9 +150,40 @@ class MemCache(dict):
             self.flush()
 
 
+    def writeToDiskCache(self):
+        ''' Write a copy of the current cache out to disk
+        '''
+        
+        if "DiskCache" in self.config and self.config['DiskCache']:
+            p = {
+                    'storage' : self.storage,
+                    'lastpurge' : self.lastpurge,
+                    'seed' : self.seed
+                }
+            
+            cachejson = json.dumps(p)
+            f = open(self.config['DiskCache'],'w')
+            f.write(cachejson)
+            f.close()
+            
+    def loadFromDiskCache(self):
+        ''' Load previously cached values from disk (if present)
+        '''
+        
+        if "DiskCache" in self.config and self.config['DiskCache'] and os.path.isfile(self.config['DiskCache']):
+            f = open(self.config['DiskCache'],'r')
+            cache = json.load(f)
+            f.close()
+            self.storage = cache['storage']
+            self.lastpurge = cache['lastpurge']
+            self.seed = cache['seed']
+            
 
 
-
+    def setConfig(self,var,value):
+        ''' Set an internal config option
+        '''
+        self.config[var] = value
 
 
 
@@ -161,6 +196,7 @@ def getJSON(url):
     print "Checking cache"
     resp = CACHE.getItem(url)
     if resp:
+        print "CACHE_HIT"
         return json.loads(resp)
     
     
@@ -705,6 +741,9 @@ def parseProjectDisplay(cmdlist):
 
 
 CACHE = MemCache()
+if DISKCACHE:
+    CACHE.setConfig('DiskCache',DISKCACHE)
+    CACHE.loadFromDiskCache()
 
 if len(sys.argv) < 2:
         # Launch interactive mode
@@ -719,6 +758,7 @@ if len(sys.argv) < 2:
                 echo_cmd = False
 
         runInteractive(display_prompt,echo_cmd)
+        CACHE.writeToDiskCache()
         sys.exit()
 
 
