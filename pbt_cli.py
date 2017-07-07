@@ -15,10 +15,10 @@ BASEDIR="https://projects.bentasker.co.uk/jira_projects"
 AUTH=False
 ADDITIONAL_HEADERS=False
 DISKCACHE='/tmp/pbtcli.cache'
+CACHE_TTL=900 # 15 mins
 
 # I use this settings file to gain access to the non-public copy of my projects
 if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
-    print "Loading settings"
     with open(os.path.expanduser("~/.pbtcli.settings"),'r') as f:
         for x in f:
             x = x.rstrip()
@@ -29,6 +29,10 @@ if os.path.isfile(os.path.expanduser("~/.pbtcli.settings")):
             cfgline = x.split("=")
             if cfgline[0] == "BASEDIR":
                 BASEDIR=cfgline[1]
+
+            if cfgline[0] == "CACHE_TTL":
+                CACHE_TTL=int(cfgline[1])
+
                 
             if cfgline[0] == "AUTH":
                 AUTH='='.join(cfgline[1:])
@@ -60,23 +64,29 @@ class MemCache(dict):
     def __init__(self):
         self.storage = {}
         self.lastpurge = int(time.time())
-        self.purgeint = 900 # 15 mins
         self.disabled = False
         self.config = {}
+        self.config['doSelfPurge'] = False # Disabled as entries have their own TTL
+        self.config['defaultTTL'] = 900 # 15 mins
+        
         # Seed hashes to try and avoid deliberate hash collisions
         self.seed = random.getrandbits(32)
 
 
-    def setItem(self,key,val):
+    def setItem(self,key,val,ttl=False):
         ''' Store an item in a specific area
         '''
         
         if self.disabled:
             return  
         
+        if not ttl:
+            # Use the default TTL
+            ttl = self.config['defaultTTL']
+        
         key = self.genKeyHash(key)
         
-        self.storage[key] = val
+        self.storage[key] = { "Value": val, "SetAt": int(time.time()), "TTL" : ttl }
 
 
     def getItem(self, key):
@@ -86,12 +96,18 @@ class MemCache(dict):
         if self.disabled:
             return  False        
         
-        key = self.genKeyHash(key)
+        keyh = self.genKeyHash(key)
         
-        if key not in self.storage:
+        if keyh not in self.storage:
             return False
-            
-        return self.storage[key]
+        
+        # Check whether the ttl has expired
+        if (int(time.time()) - self.storage[keyh]["TTL"]) > self.storage[keyh]["SetAt"]:
+            # TTL has expired. Invalidate the object and return false
+            self.invalidate(key)
+            return False
+        
+        return self.storage[keyh]["Value"]
 
 
     def invalidate(self,key):
@@ -146,7 +162,11 @@ class MemCache(dict):
         ''' Sledgehammer for a nail. Periodically purge the permanent storage to make
         sure we don't absorb too much memory
         '''
-        if (int(time.time()) - self.purgeint) > self.lastpurge:
+        
+        if 'doSelfPurge' in self.config and not self.config['doSelfPurge']:
+            return
+        
+        if (int(time.time()) - self.config['defaultTTL']) > self.lastpurge:
             self.flush()
 
 
@@ -165,6 +185,7 @@ class MemCache(dict):
             f = open(self.config['DiskCache'],'w')
             f.write(cachejson)
             f.close()
+
             
     def loadFromDiskCache(self):
         ''' Load previously cached values from disk (if present)
@@ -193,10 +214,8 @@ def getJSON(url):
     #print "Fetching %s" % (url,)
     
     # Check whether we have it in cache
-    print "Checking cache"
     resp = CACHE.getItem(url)
     if resp:
-        print "CACHE_HIT"
         return json.loads(resp)
     
     
@@ -745,6 +764,10 @@ if DISKCACHE:
     CACHE.setConfig('DiskCache',DISKCACHE)
     CACHE.loadFromDiskCache()
 
+if CACHE_TTL:
+    CACHE.setConfig('defaultTTL',CACHE_TTL)
+
+
 if len(sys.argv) < 2:
         # Launch interactive mode
         
@@ -765,6 +788,7 @@ if len(sys.argv) < 2:
 # Otherwise, pull the command from the commandline arguments
 command=" ".join(sys.argv[1:])
 processCommand(command)
+CACHE.writeToDiskCache()
 
 
 
