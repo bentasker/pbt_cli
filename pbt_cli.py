@@ -163,6 +163,20 @@ def listProject(proj,isstype=False,issstatus=False):
     print buildIssueTable(plist['issues'],isstype,issstatus)
 
 
+
+def secondsToTime(s):
+    ''' Convert a count in seconds to hours and minutes
+    '''
+    
+    if not s:
+        return "0h 0m"
+    
+    mins, secs = divmod(int(s),60)
+    hours, mins = divmod(mins,60)
+    
+    return "%dh %02dm" % (hours,mins)
+
+
 def printIssue(isskey):
     ''' Print out details about an issue
     '''
@@ -180,7 +194,9 @@ def printIssue(isskey):
     print "Issue Type:  %s" % (issue['IssueType'])
     print "Priority:    %s          Status: %s\n\n" % (issue['Priority'], issue['Status'])
     print "Reporter:    %s          Assignee: %s" % (issue['Reporter'], issue['assigneee'])
-    print "Resolution:  %s\n\n" % (issue['Resolution'],)
+    print "Resolution:  %s\n" % (issue['Resolution'],)
+    print "Time Est:    %s          Time Logged: %s\n"    % (secondsToTime(issue['TimeEstimate']), secondsToTime(issue['TimeLogged']))
+    print "Last Change: %s\n\n" % (issue['LastModified'],)
     print "------------------"
     print "Issue Description"
     print "------------------\n"
@@ -267,4 +283,5 @@ def printIssue(isskey):
 listProject('BUGGER')
 #printIssue('BUGGER-4')
 #printIssue('DNSCHAT-2')
-printIssue('BUGGER-1')
+#printIssue('BUGGER-1')
+printIssue('MAILARCHIV-10')
