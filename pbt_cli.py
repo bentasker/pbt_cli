@@ -261,12 +261,17 @@ def doTestRequest():
             request.add_header(header['name'],header['value'])
     
     try:
-        response = urllib2.urlopen(request)
+        response = urllib2.urlopen(request,timeout=5)
         jsonstr = response.read()
+        
+        # Check we actually got json back
+        # Basically checking for captive portals. Though shouldn't be an issue given we're using HTTPS
+        # but also helps if there's an issue with the server
+
+        s = json.loads(jsonstr)
         return True
-    except urllib2.URLError, e:
-        return False
-    except socket.timeout, e:
+    
+    except:
         return False
 
 
