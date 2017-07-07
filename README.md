@@ -111,7 +111,6 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 
 * Add ability to cache an entire project via the cache subcommands
 * Add ability to cache entire archive
-* Add ability to filter issues by title
 * Add ability to search (or a close approximation of)
 * Include keywords in output
 * Trigger pager for particularly long output
