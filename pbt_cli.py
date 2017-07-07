@@ -84,9 +84,9 @@ class MemCache(dict):
             # Use the default TTL
             ttl = self.config['defaultTTL']
         
-        key = self.genKeyHash(key)
+        keyh = self.genKeyHash(key)
         
-        self.storage[key] = { "Value": val, "SetAt": int(time.time()), "TTL" : ttl }
+        self.storage[keyh] = { "Value": val, "SetAt": int(time.time()), "TTL" : ttl, "Origkey" : key }
 
 
     def getItem(self, key):
@@ -685,10 +685,71 @@ def processCommand(cmd):
         return parseProjectCompDisplay(cmdlist)
 
 
+    if cmdlist[0] == "cache":
+        return parseCacheOptions(cmdlist)
+
+
 
     if cmdlist[0] == "issue":
         return printIssue(cmdlist[1])
     
+
+
+
+def parseCacheOptions(cmdlist):
+    ''' Utility functions to aid troubleshooting if the cache causes any headaches
+    '''
+    
+     if cmdlist[1] == "dump":
+        # Dump the contents of the cache
+        Cols = ['Key','Expires','Value']
+        Rows = []
+        
+        for entry in CACHE.storage:
+            p = {
+                'Key' : CACHE.storage[entry]['Origkey'],
+                'Expires' : time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(CACHE.storage[entry]['SetAt'] + CACHE.storage[entry]['TTL'])),
+                'Value' : CACHE.storage[entry]['Value'],
+                }
+            Rows.append(p)
+        print make_table(Cols,Rows)
+
+    if cmdlist[1] == "flush":
+        # Flush the cache
+        CACHE.flush()
+        print "Cache flushed"
+
+    if cmdlist[1] == "get":
+        f = CACHE.getItem(cmdlist[2])
+        if not f:
+            print "Not in Cache"
+            return
+        
+        print f
+
+
+    if cmdlist[1] == "invalidate":
+        CACHE.invalidate(cmdlist[2])
+        print "Invalidated"
+
+
+        
+    if cmdlist[1] == "print":
+        # Print a list of keys and when they expire
+        Cols = ['Key','Expires']
+        Rows = []
+        
+        for entry in CACHE.storage:
+            p = {
+                'Key' : CACHE.storage[entry]['Origkey'],
+                'Expires' : time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(CACHE.storage[entry]['SetAt'] + CACHE.storage[entry]['TTL']))
+                }
+            Rows.append(p)
+        print make_table(Cols,Rows)
+
+
+
+                
 
 
 def parseProjectCompDisplay(cmdlist):
