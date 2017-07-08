@@ -27,6 +27,8 @@ There's also an offline mode, which is initially toggled based upon a test reque
 * Pipe support
 * CLI maintains history
 * Offline reading mode
+* Shortcuts for the lazy
+* Basic search mechanisms
 
 
 
