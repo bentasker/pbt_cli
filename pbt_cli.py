@@ -546,7 +546,7 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
         print "Error"
         return
     
-    print "%s: Version %s\n\nState: %s" % (proj,plist['Name'],plist['State'])
+    print "%s: Version %s\n\nState:        %s" % (proj,plist['Name'],plist['State'])
     print "Time Est:     %s          Time Logged: %s\n"    % (plist['TimeEstimate'], plist['TimeLogged'])
     print "Release Date: %s\n" % (time.strftime('%Y-%m-%d', time.localtime(plist['ReleaseDate'])),)
     
