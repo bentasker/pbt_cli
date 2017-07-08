@@ -55,6 +55,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 ### General
 
     [Issue Key] - Display the named issue
+    [Issue Num] - If already within a project, simply entering the issue number (e.g. 10) will take you to the issue (e.g. GPXIN-10)
     projects - List all projects
 
 
@@ -110,11 +111,11 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     cache invalidate [key] - Invalidate a specific item from the cache
     cache print - Print keys and expiry times (but not values) from the cache
 
-### Offline Reading Mode
+### Set commands
 
     set Offline - Tell the cache we're offline
     set Online - Tell the cache we're online
-
+    set curproject - Set the current project key for use with shortcuts
 
 
 ## TODO

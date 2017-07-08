@@ -468,6 +468,8 @@ def listProject(proj,isstype=False,issstatus=False,titleContains=False):
         print "Error"
         return
     
+    CACHE.setItem('Navi-curproject',proj, ttl=99999999)
+    
     print "%s: %s\n\n%s\n\n" % (plist['Key'],plist['Name'],stripTags(plist['Description']))
     
     print buildIssueTable(plist['issues'],isstype,issstatus,titleContains)
@@ -503,6 +505,8 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False,titleContains=F
     if not plist:
         print "Error"
         return
+    
+    CACHE.setItem('Navi-curproject',proj, ttl=99999999)
     
     print "%s: Component %s\n\n%s" % (proj,plist['Name'],plist['Description'])
     print "--------------"
@@ -595,6 +599,8 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
         print "Error"
         return
     
+    CACHE.setItem('Navi-curproject',proj, ttl=99999999)
+    
     print "%s: Version %s\n\nState:        %s" % (proj,plist['Name'],plist['State'])
     print "Time Est:     %s          Time Logged: %s\n"    % (plist['TimeEstimate'], plist['TimeLogged'])
     print "Release Date: %s\n" % (time.strftime('%Y-%m-%d', time.localtime(plist['ReleaseDate'])),)
@@ -677,8 +683,7 @@ def printIssue(isskey):
     lastview = CACHE.getItem('Navi-now')
     CACHE.setItem('Navi-last',lastview, ttl=99999999)
     CACHE.setItem('Navi-now',isskey, ttl=99999999)
-
-
+    CACHE.setItem('Navi-curproject',isskey.split("-")[0], ttl=99999999)
 
     # Set the navigation globals based on the data
     if issue['Next']['Key']:
@@ -854,6 +859,16 @@ def processCommand(cmd):
     if re.match('[A-Z]+-[0-9]+',cmd):
         return printIssue(cmd)
 
+
+    if re.match('[0-9]+',cmd):
+        curproject = CACHE.getItem('Navi-curproject')
+        if not curproject:
+            print "Error: You cannot use Issue shortcut when not already viewing a project"
+            return
+        return printIssue("%s-%s" % (curproject,cmd))
+        
+
+
     # We now need to build the command, but take into account that strings may be wrapped in quotes
     # these shoudld be treated as a single argument 
 
@@ -961,6 +976,8 @@ def parseSetCmd(cmdlist):
         CACHE.config['amOffline'] = False
         print "Offline mode disabled"
         
+    if cmdlist[1] == "curproject":
+        CACHE.setItem('Navi-curproject',cmdlist[2], ttl=99999999)
 
 
 def parseSearchCmd(cmdlist):
