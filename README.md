@@ -65,6 +65,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     project [projkey] type [types] - List only issues of type (multiple types can be space seperated)
     project [projkey] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes)
     project [projkey] title [searchstring] - List only issues where title contains specified phrase
+    project [projkey] listcomps - List components for the project
     project [projkey] listvers - List version names for the project
     
 
@@ -78,6 +79,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     projectver [projkey] [ver] implements - List only issues implemented (or fixed) in the specified version
     projectver [projkey] [ver] title [searchstring] - List only issues where title contains specified phrase
     projectver [projkey] listvers - List version names for the project
+    
 
 ### Project Components
 
@@ -86,6 +88,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     projectcomp [projkey] [comp name] type [types] - List only issues of type (multiple types can be space seperated)
     projectcomp [projkey] [comp name] status [statuses] - List only issues with status matching list (multiple types can be space seperated without quotes).
     projectcomp [projkey] [comp name] title [searchstring] - List only issues where title contains specified phrase
+    projectcomp [projkey] listcomps - List components for the project    
     
 
 ### Issue View

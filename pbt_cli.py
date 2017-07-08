@@ -513,6 +513,31 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False,titleContains=F
 
 
 
+def listProjectComps(proj):
+    ''' Generate a list of all components for a project
+    '''
+    plist = fetchProject(proj)
+    if "components" not in plist or len(plist['components']) < 1:
+        print "No components configured for project %s" % (proj,)
+        return
+    
+    
+    # Otherwise iterate over and build a table
+    Cols = ['Name','Description']
+    Rows = []
+    
+    for ver in plist['components']:
+        p = {
+                'Name' : ver['Name'],
+                'Description' : ver['Description']
+            }
+
+        
+        Rows.append(p)
+    
+    print make_table(Cols,Rows)    
+
+
 def listProjectVers(proj):
     ''' Generate a list of all versions for a project
     '''
@@ -979,6 +1004,9 @@ def parseCacheOptions(cmdlist):
 def parseProjectCompDisplay(cmdlist):
     ''' Handle the command line syntax for anything beginning with the word projectver
     '''
+
+    if cmdlist[2] == "listcomps":
+        return listProjectComps(cmdlist[1])
     
     # Most simple case, simply list the project
     if len(cmdlist) == 3:
@@ -1003,6 +1031,9 @@ def parseProjectVerDisplay(cmdlist):
     ''' Handle the command line syntax for anything beginning with the word projectver
     '''
     
+    if cmdlist[2] == "listvers":
+        return listProjectVers(cmdlist[1]) 
+    
     # Most simple case, simply list the project
     if len(cmdlist) == 3:
         return listProjectVersion(cmdlist[1],cmdlist[2])
@@ -1026,8 +1057,7 @@ def parseProjectVerDisplay(cmdlist):
     if cmdlist[3] == "title":
         return listProjectVersion(cmdlist[1], cmdlist[2], titleContains=' '.join(cmdlist[4:]))
 
-    if cmdlist[2] == "listvers":
-        return listProjectVers(cmdlist[1])
+   
 
 
 
@@ -1044,6 +1074,8 @@ def parseProjectDisplay(cmdlist):
     if cmdlist[2] == "isopen":
         return listProject(cmdlist[1], issstatus=["Open","In Progress"])
 
+    if cmdlist[2] == "listcomps":
+        return listProjectComps(cmdlist[1])
 
     if cmdlist[2] == "listvers":
         return listProjectVers(cmdlist[1])
