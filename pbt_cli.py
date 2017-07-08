@@ -420,7 +420,6 @@ def buildIssueTable(issues,isstype=False,issstatus=False, titleContains=False):
     return make_table(Cols,rows)
     
 
-
 def fetchProject(proj):
     ''' Fetch the JSON for a project, and return it
     '''
@@ -615,6 +614,36 @@ def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,sho
     
 
 
+def doBasicSearch(term):
+    ''' Run a basic search for the provided term in title
+    '''
+    
+    url = "%s/sitemap.json" % (BASEDIR,)
+    plist = getJSON(url)
+    
+    term = term.lower()
+    matches = []
+    
+    print "Search results for '%s'\n" % (term,)
+    
+    
+    for entry in plist['items']:
+        if entry['Class'] != "Issue":
+            continue
+        
+        if "Name" not in entry or not entry['Name']:
+            # We want to exclude any moved entries
+            continue
+        
+        if term in entry["Name"].lower():
+            matches.append(entry)
+            continue
+        
+
+    print buildIssueTable(matches)
+        
+        
+        
 
 def secondsToTime(s):
     ''' Convert a count in seconds to hours and minutes
@@ -915,6 +944,9 @@ def processCommand(cmd):
     if cmdlist[0] == "set":
         return parseSetCmd(cmdlist)
     
+    if cmdlist[0] == "search":
+        return parseSearchCmd(cmdlist)    
+    
 
 
 def parseSetCmd(cmdlist):
@@ -929,6 +961,14 @@ def parseSetCmd(cmdlist):
         CACHE.config['amOffline'] = False
         print "Offline mode disabled"
         
+
+
+def parseSearchCmd(cmdlist):
+    ''' Used to provide basic search functionality
+    '''
+    
+    
+    return doBasicSearch(' '.join(cmdlist[1:]))
 
 
 

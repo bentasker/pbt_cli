@@ -96,7 +96,11 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     issue [Issue Key] - Display the named issue
     [Issue Key] - Shortcut to the above
 
+### Search
 
+    search [search phrase] - Search globally for any issue with the phrase in it's title
+    
+    
 ### Cache Interaction
 
     cache dump - Dumps out keys, values and expiry times from the cache (generates a *lot* of output)
@@ -117,7 +121,6 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 
 * Add ability to cache an entire project via the cache subcommands
 * Add ability to cache entire archive
-* Add ability to search (or a close approximation of)
 * Include keywords in output
 * Trigger pager for particularly long output
 
