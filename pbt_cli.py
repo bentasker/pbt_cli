@@ -615,6 +615,14 @@ def printIssue(isskey):
     print "------------------"
     print "Issue Type:  %s" % (issue['IssueType'])
     print "Priority:    %s          Status: %s\n\n" % (issue['Priority'], issue['Status'])
+    
+    if len(issue['components']) > 0:
+        print "Components:  %s\n" % (','.join([x['Name'] for x in issue['components']]))
+
+    print "Affects:     %s" % (','.join([x['Name'] for x in issue['AffectsVersions']]))
+    print "Fixed in:    %s\n" % (','.join([x['Name'] for x in issue['FixVersions']]))
+
+        
     print "Reporter:    %s          Assignee: %s" % (issue['Reporter'], issue['assigneee'])
     print "Resolution:  %s\n" % (issue['Resolution'],)
     print "Time Est:    %s          Time Logged: %s\n"    % (secondsToTime(issue['TimeEstimate']), secondsToTime(issue['TimeLogged']))
@@ -628,9 +636,7 @@ def printIssue(isskey):
     
     if len(issue['FixVersions']) > 0:
         print "Fix Versions: %s" % (','.join([x['Name'] for x in issue['FixVersions']]))
-        
-
-    
+            
     print "------------------"
     print "Issue Description"
     print "------------------\n"
