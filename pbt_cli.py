@@ -618,7 +618,19 @@ def printIssue(isskey):
     print "Reporter:    %s          Assignee: %s" % (issue['Reporter'], issue['assigneee'])
     print "Resolution:  %s\n" % (issue['Resolution'],)
     print "Time Est:    %s          Time Logged: %s\n"    % (secondsToTime(issue['TimeEstimate']), secondsToTime(issue['TimeLogged']))
-    print "Last Change: %s\n\n" % (issue['LastModified'],)
+    print "Created:     %s" % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(issue['Created'])))
+    print "Updated: %s\n\n" % (issue['LastModified'],)
+    
+    
+    if len(issue['AffectsVersions']) > 0:
+        print "Affects Versions: %s" % (','.join([x['Name'] for x in issue['AffectsVersions']]))
+    
+    
+    if len(issue['FixVersions']) > 0:
+        print "Fix Versions: %s" % (','.join([x['Name'] for x in issue['FixVersions']]))
+        
+
+    
     print "------------------"
     print "Issue Description"
     print "------------------\n"
