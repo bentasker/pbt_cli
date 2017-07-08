@@ -57,7 +57,8 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 ### General
 
     [Issue Key] - Display the named issue
-    [Issue Num] - If already within a project, simply entering the issue number (e.g. 10) will take you to the issue (e.g. GPXIN-10)    [Issue Num] - If already within a project, [entering the issue number will take you to the issue](https://github.com/bentasker/pbt_cli/commit/ad6c1dddc7aebb98f713df4bd3a847e6e19dc58e)    projects - List all projects
+    [Issue Num] - If already within a project, simply entering the issue number (e.g. 10) will take you to the issue (e.g. GPXIN-10)
+    projects - List all projects
 
 
 ### Project views
@@ -97,8 +98,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 
     issue [Issue Key] - Display the named issue
     [Issue Key] - Shortcut to the above
-    [Issue Num] - If already within a project, [entering the issue number will take you to the issue](https://github.com/bentasker/pbt_cli/commit/ad6c1dddc7aebb98f713df4bd3a847e6e19dc58e)
-    
+
 ### Search
 
     search [search phrase] - Search globally for any issue with the phrase in it's title
