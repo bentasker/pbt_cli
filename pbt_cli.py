@@ -513,7 +513,32 @@ def listProjectComponent(proj,comp,isstype=False,issstatus=False,titleContains=F
 
 
 
-
+def listProjectVers(proj):
+    ''' Generate a list of all versions for a project
+    '''
+    
+    plist = fetchProject(proj)
+    if "versions" not in plist or len(plist['versions']) < 1:
+        print "No versions configured for project %s" % (proj,)
+        return
+    
+    # Otherwise iterate over and build a table
+    Cols = ['Name','State','Release Date']
+    Rows = []
+    
+    for ver in plist['versions']:
+        p = {
+                'Name' : ver['Name'],
+                'State' : ver['State'],
+                'Release Date' : ''           
+            }
+        
+        if ver['ReleaseDate']:
+            p['Release Date'] = time.strftime('%Y-%m-%d', time.localtime(ver['ReleaseDate']))
+        
+        Rows.append(p)
+    
+    print make_table(Cols,Rows)
 
 
 def listProjectVersion(proj,ver,isstype=False,issstatus=False,showKnown=True,showFixes=True,titleContains=False):
@@ -1001,6 +1026,10 @@ def parseProjectVerDisplay(cmdlist):
     if cmdlist[3] == "title":
         return listProjectVersion(cmdlist[1], cmdlist[2], titleContains=' '.join(cmdlist[4:]))
 
+    if cmdlist[2] == "listvers":
+        return listProjectVers(cmdlist[1])
+
+
 
 
 def parseProjectDisplay(cmdlist):
@@ -1014,6 +1043,10 @@ def parseProjectDisplay(cmdlist):
 
     if cmdlist[2] == "isopen":
         return listProject(cmdlist[1], issstatus=["Open","In Progress"])
+
+
+    if cmdlist[2] == "listvers":
+        return listProjectVers(cmdlist[1])
     
     if cmdlist[2] == "type":
         return listProject(cmdlist[1], isstype=cmdlist[3:])
