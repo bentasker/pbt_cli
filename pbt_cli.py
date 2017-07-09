@@ -1003,7 +1003,16 @@ def processCommand(cmd):
 def parseSetCmd(cmdlist):
     ''' Used to set various internals
     '''
-    
+
+
+    if cmdlist[1] == "defaultttl":
+        CACHE.config['defaultTTL'] = int(cmdlist[2])
+        print "Default TTL set to %s" % (cmdlist[2])
+
+    if cmdlist[1] == "lrutarget":
+        CACHE.config['LRUTarget'] = cmdlist[2]
+        print "LRU Target set to %s%" % (cmdlist[2])
+        
     if cmdlist[1] == "Offline":
         CACHE.config['amOffline'] = True
         print "Offline mode enabled"

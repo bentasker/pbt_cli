@@ -116,6 +116,8 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
 
 ### Set commands
 
+    set defaultttl [seconds] - Set the default cache ttl to number of seconds
+    set lrutarget [decimal] - The target percentage reduction if/when running a LRU
     set Offline - Tell the cache we're offline
     set Online - Tell the cache we're online
     set curproject - Set the current project key for use with shortcuts
