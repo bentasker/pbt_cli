@@ -624,15 +624,21 @@ def doBasicSearch(term):
     ''' Run a basic search for the provided term in title
     '''
     
+    print "Search results for '%s'\n" % (term,)
+    
+    cachekey = 'Search-Basic-Search:%s' % (term,)
+    cachedres = CACHE.getItem(cachekey)
+    
+    if cachedres:
+          print buildIssueTable(cachedres)
+          return
+    
     url = "%s/sitemap.json" % (BASEDIR,)
     plist = getJSON(url)
     
     term = term.lower()
     matches = []
-    
-    print "Search results for '%s'\n" % (term,)
-    
-    
+
     for entry in plist['items']:
         if entry['Class'] != "Issue":
             continue
@@ -644,8 +650,8 @@ def doBasicSearch(term):
         if term in entry["Name"].lower():
             matches.append(entry)
             continue
-        
 
+    CACHE.setItem(cachekey,matches)
     print buildIssueTable(matches)
         
         
