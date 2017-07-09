@@ -111,6 +111,7 @@ The upstream JSON files define whether there's a 'next' or 'previous' issue, whe
     cache flush - Flush all values out of the cache (will also update the ondisk cache)
     cache get [key] - Fetch the value of a specific item from the cache
     cache invalidate [key] - Invalidate a specific item from the cache
+    cache LRU   - Run a least recently used cache clearance
     cache print - Print keys and expiry times (but not values) from the cache
 
 ### Set commands

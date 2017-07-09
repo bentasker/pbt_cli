@@ -5,6 +5,7 @@ import json
 import re
 import time
 
+import math
 import sys, readline, os,stat,requests
 import random
 import hashlib
@@ -70,6 +71,7 @@ class MemCache(dict):
         self.config['doSelfPurge'] = False # Disabled as entries have their own TTL
         self.config['defaultTTL'] = 900 # 15 mins
         self.config['amOffline'] = False # Disable Offline mode by default
+        self.config['LRUTarget'] = 0.25 # Percentage reduction target for LRUs
         
         # Seed hashes to try and avoid deliberate hash collisions
         self.seed = random.getrandbits(32)
@@ -87,8 +89,8 @@ class MemCache(dict):
             ttl = self.config['defaultTTL']
         
         keyh = self.genKeyHash(key)
-        
-        self.storage[keyh] = { "Value": val, "SetAt": int(time.time()), "TTL" : ttl, "Origkey" : key }
+        now = int(time.time())
+        self.storage[keyh] = { "Value": val, "SetAt": now, "TTL" : ttl, "Origkey" : key, "Last-Use": now}
 
 
     def getItem(self, key):
@@ -111,6 +113,7 @@ class MemCache(dict):
                 self.invalidate(key)
                 return False
         
+        self.storage[keyh]["Last-Use"] = int(time.time())
         return self.storage[keyh]["Value"]
 
 
@@ -172,6 +175,33 @@ class MemCache(dict):
         
         if (int(time.time()) - self.config['defaultTTL']) > self.lastpurge:
             self.flush()
+
+
+    def LRU(self):
+        ''' Run a Least Recently Used flush on the cache storage
+        '''
+        
+        items = {}
+        
+        # Iterate over items in the cache, pulling out the cache key and when the item was last used
+        for keyh in self.storage:
+            items[keyh] = self.storage[keyh]['Last-Use']
+            
+        # Now we want to sort our dict from smallest timestamp (i.e. least recently used) to highest
+        ordered = sorted(items.items(), key=lambda x: x[1])
+
+        # That gives us a list of tuples (key,timestamp). We want to clear the first 25% (ish)
+        numitems = len(items)
+        toclear = math.ceil(numitems * self.config['LRUTarget'])
+        x = 0
+        
+        while x < toclear:
+            entry = ordered[x][0]
+            del self.storage[entry]           
+            x = x + 1
+
+        return x
+
 
 
     def writeToDiskCache(self):
@@ -1025,6 +1055,11 @@ def parseCacheOptions(cmdlist):
         getJSON(cmdlist[2])
         print "Written to cache"
         return
+
+    if cmdlist[1] == "LRU":
+        count = CACHE.LRU()
+        print "LRU Triggered. %s items removed" % (count,)
+
 
     if cmdlist[1] == "flush":
         # Flush the cache
