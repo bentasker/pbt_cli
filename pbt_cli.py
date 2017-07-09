@@ -554,7 +554,7 @@ def listProjectComps(proj):
         print "No components configured for project %s" % (proj,)
         return
     
-    
+    CACHE.setItem('Navi-curproject',proj, ttl=99999999)
     # Otherwise iterate over and build a table
     Cols = ['Name','Description']
     Rows = []
@@ -580,6 +580,7 @@ def listProjectVers(proj):
         print "No versions configured for project %s" % (proj,)
         return
     
+    CACHE.setItem('Navi-curproject',proj, ttl=99999999)
     # Otherwise iterate over and build a table
     Cols = ['Name','State','Release Date']
     Rows = []
