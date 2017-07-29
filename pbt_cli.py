@@ -777,7 +777,7 @@ def printIssue(isskey):
                     }
                 rows.append(entry)
                 if subtask['Key'] not in ISSUEURLS:
-                    ISSUEURLS[subtask['Key']] = issue['href']
+                    ISSUEURLS[subtask['Key']] = subtask['href']
             
             print make_table(Cols,rows)
     
